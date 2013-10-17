@@ -7,6 +7,7 @@
 //
 
 #import "RSSParser.h"
+#import "NSString+HTML.h"
 
 static dispatch_queue_t rssparser_success_callback_queue() {
     static dispatch_queue_t parser_success_callback_queue;
@@ -96,11 +97,16 @@ static dispatch_queue_t rssparser_success_callback_queue() {
     if (currentItem != nil && tmpString != nil) {
         
         if ([elementName isEqualToString:@"title"]) {
-            [currentItem setTitle:tmpString];
+            NSString *noNewlineTitle = [[tmpString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
+            NSString *noTrailingWhitespaceTitle = [noNewlineTitle stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            [currentItem setTitle:noTrailingWhitespaceTitle];
         }
         
         if ([elementName isEqualToString:@"description"] || [elementName isEqualToString:@"content"]) {
-            [currentItem setItemDescription:tmpString];
+            NSString *desc = [tmpString stringByConvertingHTMLToPlainText];
+            NSString *noNewlineArticle = [[desc componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]] componentsJoinedByString:@" "];
+            NSString *noTrailingWhitespaceArticle = [noNewlineArticle stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+            [currentItem setItemDescription:noTrailingWhitespaceArticle];
         }
         
         if ([elementName isEqualToString:@"content:encoded"]) {
